@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Phishing Website Detector</title>
+<meta name="description" content="Detect phishing websites using Machine Learning and Artificial Intelligence.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<header class="site-header fade-in">
+  <div class="container header-inner">
+    <div class="brand">
+      <span class="shield-wrap">
+        <svg class="shield-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2L4 5v6c0 5.25 3.4 9.74 8 11 4.6-1.26 8-5.75 8-11V5l-8-3z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M9 12.5l2 2 4-4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </span>
+      <div class="brand-text">
+        <h1>Phishing Website Detection System</h1>
+        <p class="subtitle">
+Analyze website URLs and identify whether they are legitimate or phishing using a machine learning model.
+</p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+  <section class="scanner-section glass-card fade-in" id="scannerSection">
+    <p class="eyebrow">Website URL Analysis</p>
+    <h2 class="section-title">Scan a website URL</h2>
+    <form id="scanForm" class="scan-form" autocomplete="off">
+      <div class="input-wrap">
+        <svg class="input-icon" viewBox="0 0 24 24" fill="none"><path d="M10 13a5 5 0 007.07 0l2.83-2.83a5 5 0 00-7.07-7.07L11.5 4.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><path d="M14 11a5 5 0 00-7.07 0L4.1 13.83a5 5 0 007.07 7.07l1.4-1.4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        <input type="text" id="urlInput" class="url-input" placeholder="Enter Website URL (https://example.com)" required>
+      </div>
+      <button type="submit" class="btn-analyze" id="analyzeBtn">
+        <span class="btn-label">Analyze Website</span>
+        <span class="btn-loader d-none" id="btnLoader"></span>
+      </button>
+    </form>
+
+    <div class="loading-panel d-none" id="loadingPanel">
+      <div class="radar">
+        <div class="radar-sweep"></div>
+        <div class="radar-ring"></div>
+        <div class="radar-ring ring-2"></div>
+      </div>
+      <p class="loading-text" id="loadingText">Extracting URL features&hellip;</p>
+    </div>
+
+    <p class="error-text d-none" id="errorText"></p>
+  </section>
+
+  <section class="result-card glass-card d-none fade-in" id="resultCard">
+    <div class="result-header">
+      <div class="result-icon-wrap" id="resultIconWrap">
+        <span id="resultIcon">✔</span>
+      </div>
+      <div class="result-heading">
+        <h2 id="resultTitle">Legitimate Website</h2>
+        <p id="resultMessage">This website appears safe to visit.</p>
+      </div>
+    </div>
+
+    <div class="result-metrics">
+      <div class="metric">
+        <span class="metric-label">Prediction Result</span>
+        <span class="metric-value" id="metricPrediction">Legitimate</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Confidence</span>
+        <span class="metric-value metric-mono" id="metricConfidence">0%</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Website Status</span>
+        <span class="metric-value" id="metricStatus">&mdash;</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Risk Level</span>
+        <span class="metric-value" id="metricRisk">&mdash;</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Scan Time</span>
+        <span class="metric-value metric-mono" id="metricScanTime">&mdash;</span>
+      </div>
+    </div>
+
+    <div class="confidence-bar-track">
+      <div class="confidence-bar-fill" id="confidenceBarFill"></div>
+    </div>
+  </section>
+
+  <section class="features-section glass-card d-none fade-in" id="featuresSection">
+    <p class="eyebrow">Feature Analysis</p>
+    <h2 class="section-title">Feature analysis</h2>
+    <div class="features-grid" id="featuresGrid"></div>
+  </section>
+
+  <section class="stats-section fade-in">
+    <div class="stats-grid">
+      <div class="glass-card stat-card">
+        <span class="stat-icon">🌐</span>
+        <span class="stat-value mono" id="statTotal">{{ stats.total }}</span>
+        <span class="stat-label">Total Websites Scanned</span>
+      </div>
+      <div class="glass-card stat-card stat-safe">
+        <span class="stat-icon">🛡️</span>
+        <span class="stat-value mono" id="statLegit">{{ stats.legit }}</span>
+        <span class="stat-label">Legitimate Websites</span>
+      </div>
+      <div class="glass-card stat-card stat-danger">
+        <span class="stat-icon">⚠️</span>
+        <span class="stat-value mono" id="statPhish">{{ stats.phish }}</span>
+        <span class="stat-label">Phishing Websites</span>
+      </div>
+      <div class="glass-card stat-card stat-accent">
+        <span class="stat-icon">🎯</span>
+        <span class="stat-value mono" id="statAccuracy">97.4%</span>
+        <span class="stat-label">Detection Accuracy</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="history-section glass-card fade-in">
+    <p class="eyebrow">Scan History</p>
+    <h2 class="section-title">Recent scans</h2>
+    <div class="table-responsive">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>URL</th>
+            <th>Result</th>
+            <th>Confidence</th>
+            <th>Date &amp; Time</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody">
+          {% for scan in history %}
+          <tr>
+            <td class="mono">{{ scan.url }}</td>
+            <td>
+              {% if scan.label == 'legitimate' %}
+              <span class="badge-safe">Legitimate</span>
+              {% else %}
+              <span class="badge-danger">Phishing</span>
+              {% endif %}
+            </td>
+            <td class="mono">{{ scan.confidence }}%</td>
+            <td class="mono">{{ scan.timestamp }}</td>
+          </tr>
+          {% else %}
+          <tr class="empty-row" id="historyEmptyRow">
+            <td colspan="4">No scans yet &mdash; analyze a URL above to populate history.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer fade-in">
+  <div class="container footer-inner">
+    <div class="footer-brand">
+      <svg class="shield-icon-sm" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 5v6c0 5.25 3.4 9.74 8 11 4.6-1.26 8-5.75 8-11V5l-8-3z" stroke="currentColor" stroke-width="1.4"/></svg>
+      AI Phishing Website Detector
+    </div>
+    
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
