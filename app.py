@@ -4,10 +4,9 @@ AI Phishing Website Detector — Flask backend
 This performs REAL analysis on the submitted URL:
   1. Structural URL checks   (length, IP address, '@', hyphens, subdomains,
                                suspicious keywords, TLD, punycode, HTTPS)
-  2. Brand impersonation     (typosquatting + combosquatting against known brands)
-  3. Live DNS resolution     (socket.gethostbyname)
-  4. Live HTTP reachability  (requests.get with redirects + timeout)
-  5. TLS/SSL certificate validity (via requests' certificate verification)
+  2. Live DNS resolution     (socket.gethostbyname)
+  3. Live HTTP reachability  (requests.get with redirects + timeout)
+  4. TLS/SSL certificate validity (via requests' certificate verification)
 
 These are combined into a weighted score (a transparent, rule-based stand-in
 for a trained ML classifier) to produce a final verdict + confidence.
@@ -87,6 +86,19 @@ def normalize_url(raw_url: str) -> str:
     if not re.match(r"^https?://", raw_url, re.IGNORECASE):
         return "http://" + raw_url
     return raw_url
+
+
+DOMAIN_REGEX = re.compile(
+    r"^([a-zA-Z0-9]([a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?\.)+[A-Za-z]{2,}$"
+)
+
+
+def looks_like_domain(hostname: str) -> bool:
+    if not hostname:
+        return False
+    if re.match(r"^(\d{1,3}\.){3}\d{1,3}$", hostname):
+        return True
+    return bool(DOMAIN_REGEX.match(hostname))
 
 
 def registrable_label(hostname: str) -> str:
@@ -256,6 +268,13 @@ def predict():
 
     if not raw_url:
         return jsonify({"error": "A URL is required."}), 400
+
+    hostname = urlparse(normalize_url(raw_url)).hostname or ""
+    if not looks_like_domain(hostname):
+        return jsonify({
+            "error": "That doesn't look like a valid website URL. "
+                     "Please enter something like https://example.com"
+        }), 400
 
     features, dns_ok, reachable, matched_brand = extract_features(raw_url)
     is_phishing, confidence, risk = score_features(features)
